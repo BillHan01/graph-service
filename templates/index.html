@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html>
 <body>
+    <h3>创建新项目</h3>
+    <div id="create-project-container">
+        <input type="text" id="project-name-input" placeholder="请输入项目名称">
+        <button onclick="createProject()">创建项目</button>
+        <p id="create-status"></p>
+    </div>
+
     <h2>Zep 图谱笔记提交与可视化</h2>
 
     <div id="form-container">
         <form id="note-form">
+            <label>选择项目（project_name）：</label>
+            <select name="project_name" id="submit-project-select" required></select>
+
+            <label>文章标题（article_title）：</label>
+            <input type="text" name="article_title" required>
+
             <label>原文（origin）</label>
             <textarea name="origin" required></textarea>
 
@@ -18,6 +31,9 @@
 
     <h3>搜索图谱</h3>
     <form id="search-form">
+        <label>选择项目：</label>
+        <select name="project_name" id="retrieval-project-select" required></select>
+
         <label>查询内容：</label>
         <input type="text" name="query" required>
 
@@ -33,9 +49,32 @@
 
     <h3>知识图谱</h3>
     <button onclick="reloadGraph()">刷新图谱</button>
-    <iframe id="graph-frame" src="/graph" width="100%" height="600px" style="border:1px solid #ccc;"></iframe>
-
+    <iframe id="graph-frame" src="/graph?user_id=Countries" width="100%" height="600px" style="border:1px solid #ccc;"></iframe>
     <script>
+        // 模拟已有项目列表（可改为后端动态拉取）
+        const projectList = ["Deep-Learning", "Germany-Information"];
+
+        window.onload = () => {
+            const submitSelect = document.getElementById("submit-project-select");
+            const retrievalSelect = document.getElementById("retrieval-project-select");
+
+            for (const name of projectList) {
+                const option1 = document.createElement("option");
+                option1.value = name;
+                option1.textContent = name;
+                submitSelect.appendChild(option1);
+
+                const option2 = document.createElement("option");
+                option2.value = name;
+                option2.textContent = name;
+                retrievalSelect.appendChild(option2);
+            }
+
+            // 初始加载图谱（以提交表单的选中值为准）
+            reloadGraph();
+        };
+
+
         document.getElementById("note-form").addEventListener("submit", function (e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -57,8 +96,9 @@
         });
 
         function reloadGraph() {
+            const selectedProject = document.getElementById("submit-project-select").value;
             const frame = document.getElementById("graph-frame");
-            frame.src = frame.src; // 强制刷新 iframe
+            frame.src = "/graph?user_id=" + encodeURIComponent(selectedProject) + "&ts=" + Date.now(); // 加时间戳防缓存
         }
 
         // === 搜索节点功能 ===
@@ -104,7 +144,36 @@
             });
         });
 
+        function createProject() {
+            const input = document.getElementById("project-name-input");
+            const name = input.value.trim();
+            const statusBox = document.getElementById("create-status");
 
+            if (!name) {
+                statusBox.textContent = "⚠️ 项目名称不能为空";
+                return;
+            }
+
+            fetch("/create_project", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ project_name: name })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    statusBox.textContent = `✅ 项目 "${name}" 创建成功`;
+                    input.value = "";
+                } else {
+                    statusBox.textContent = "❌ 创建失败：" + data.message;
+                }
+            })
+            .catch(err => {
+                statusBox.textContent = "❌ 请求出错：" + err;
+            });
+        }
     </script>
 </body>
 </html>

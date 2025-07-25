@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "ec7eb5a6-92c1-4618-82bc-0cabaca1cf32", "label": "Christmas markets", "shape": "dot", "title": "Christmas markets are a significant cultural tradition in Germany, reflecting its rich history and cultural symbols. They are associated with festive celebrations, traditional foods, and cultural icons such as the Christmas markets themselves, which are a prominent part of German festivals. Germany values its cultural traditions, including Christmas markets, which are part of its identity along with other symbols like the Brandenburg Gate, Oktoberfest, Beethoven, and Goethe."}, {"color": "#97c2fc", "id": "e150c7e9-778f-4980-b4e6-7287e2ffea0b", "label": "dual education model", "shape": "dot", "title": "The dual education model in Germany is a key feature of its education system, combining classroom learning with practical experience through vocational training (Ausbildung). This approach effectively bridges education and employment, contributing to Germany\u0027s strong economy and skilled workforce."}, {"color": "#97c2fc", "id": "c8fdb49d-60a8-4475-a7b0-4e4a14d0f3b4", "label": "automotive", "shape": "dot", "title": "Germany is a federal parliamentary republic in Central Europe, consisting of 16 federal states with a population of over 83 million. Berlin is its capital and largest city. The country has the largest economy in Europe, driven by key industries such as automotive, mechanical engineering, chemical, and electronics. Germany is a leading exporter of goods worldwide, with a strong manufacturing base and export-oriented industry, especially in automobiles and engineering."}, {"color": "#97c2fc", "id": "c7ecbd28-43cb-49c8-a374-ae11e5079af8", "label": "Germany-Information Project", "shape": "dot", "title": "user with the id of Germany-Information, name of Germany-Information Project and email Germany-Information@auto.project."}, {"color": "#97c2fc", "id": "ba2134bf-0228-4fa9-af53-c1833f47f420", "label": "Central Europe", "shape": "dot", "title": "Germany is a federal parliamentary republic in Central Europe, consisting of 16 federal states with a population of over 83 million. Its capital and largest city is Berlin. The country is organized as a federal state governed through a parliamentary system, with Berlin serving as its political and cultural center."}, {"color": "#97c2fc", "id": "b802d093-f46d-497d-9c64-89d6681ccc4d", "label": "16 federal states", "shape": "dot", "title": "The entity \u002716 federal states\u0027 refers to the federal states of Germany. Germany is a federal parliamentary republic in Central Europe, consisting of 16 federal states. It has a population of over 83 million people, with Berlin as its capital and largest city. The country is organized as a federal state governed through a parliamentary system, with Berlin serving as its political and cultural center."}, {"color": "#97c2fc", "id": "af139a34-c39e-4d9c-9d5e-c4cc20061427", "label": "mechanical engineering", "shape": "dot", "title": "Mechanical engineering is a key industry in Germany, which has the largest economy in Europe. Germany\u0027s economy is driven by its strong manufacturing base, including automotive, chemical, electronics, and mechanical engineering sectors. The country is a leading exporter of goods worldwide, with a focus on automobiles and engineering."}, {"color": "#97c2fc", "id": "a1b213ce-34ce-4825-a143-1db9de385595", "label": "Berlin", "shape": "dot", "title": "Berlin is the capital and largest city of Germany, which is a federal parliamentary republic in Central Europe. Germany consists of 16 federal states and has a population of over 83 million people. Berlin serves as its political and cultural center, and the country is governed through a parliamentary system."}, {"color": "#97c2fc", "id": "997e3513-2441-4ddb-ac0d-8c2871c17d9c", "label": "Goethe", "shape": "dot", "title": "Goethe was a prominent German cultural figure, associated with Germany\u0027s rich cultural heritage. Germany values its cultural symbols, including figures like Beethoven and Goethe, as well as traditions such as Oktoberfest and Christmas markets. The country has a strong history of art, music, and literature, which Goethe contributed to significantly. Germany\u0027s cultural identity is reflected in its symbols, festivals, and historical icons, emphasizing its importance in art, food, and festivals."}, {"color": "#97c2fc", "id": "94b0d3e0-8df7-42bf-92ec-2731c41d8072", "label": "Brandenburg Gate", "shape": "dot", "title": "The Brandenburg Gate is a significant cultural symbol of Germany, representing its history and identity. It is one of the most important German cultural symbols, reflecting the country\u0027s traditions, art, and festivals. The Gate is associated with Germany\u0027s historical icons and cultural heritage, including its role in events like Oktoberfest and its connection to figures such as Beethoven and Goethe. As a prominent monument in Berlin, it embodies Germany\u0027s national pride and cultural history."}, {"color": "#97c2fc", "id": "915f8810-d845-4e7c-99fb-9c2840a2d05f", "label": "public universities", "shape": "dot", "title": "Public universities in Germany offer free or low-cost education and are known for their vocational training and dual education model, which combines classroom learning with practical experience. This system effectively bridges education and employment, contributing to Germany\u0027s well-educated workforce."}, {"color": "#97c2fc", "id": "7f1d0a1e-423f-403c-b0d0-02440e3ebd1a", "label": "83 million people", "shape": "dot", "title": "Germany is a federal parliamentary republic in Central Europe, consisting of 16 federal states with a population of over 83 million people. Berlin is the capital and largest city, serving as its political and cultural center."}, {"color": "#97c2fc", "id": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "Germany", "shape": "dot", "title": "Germany is a federal parliamentary republic in Central Europe, consisting of 16 federal states with a population of over 83 million. Berlin is its capital and largest city, serving as its political and cultural center. The country has the largest economy in Europe, driven by key industries such as automotive, mechanical engineering, chemical, and electronics. Germany is a leading exporter of goods worldwide, with a strong manufacturing base and export-oriented industry, especially in automobiles and engineering. The education system offers free or low-cost education in public universities and is known for its vocational training (Ausbildung) and dual education model, which combines classroom learning with practical experience, effectively bridging education and employment."}, {"color": "#97c2fc", "id": "73fa51be-5ec7-45bf-a384-7f0a5cf4ba69", "label": "Oktoberfest", "shape": "dot", "title": "Oktoberfest is a traditional German festival that reflects Germany\u0027s rich cultural heritage. It is associated with Germany\u0027s cultural symbols such as beer, festivals, and traditions like Christmas markets. The festival embodies Germany\u0027s cultural identity through its food, music, and celebrations, which are part of the country\u0027s long-standing customs and history."}, {"color": "#97c2fc", "id": "6b3595c9-c743-4bd4-8dc2-702944c51b4d", "label": "electronics", "shape": "dot", "title": "Germany is a federal parliamentary republic in Central Europe with 16 federal states and a population of over 83 million. Its capital and largest city is Berlin. The country has the largest economy in Europe, driven by key industries such as automotive, mechanical engineering, chemical, and electronics. Germany is a leading exporter of goods worldwide, with a strong manufacturing base and export-oriented industry."}, {"color": "#97c2fc", "id": "2efb1dda-0099-40d2-a27d-9b1a689d0101", "label": "bread culture", "shape": "dot", "title": "The \u0027bread culture\u0027 of Germany is a significant aspect of its cultural identity, reflecting traditional practices and national pride. Germany is renowned for its bread, which includes a wide variety of types and regional specialties. Bread is an integral part of German food traditions, with a long history and cultural significance. The country celebrates its bread culture through festivals, markets, and a rich variety of bread recipes that have been passed down through generations. This tradition highlights Germany\u0027s appreciation for culinary craftsmanship and cultural heritage, making bread not just a staple food but also a symbol of national identity and cultural continuity."}, {"color": "#97c2fc", "id": "2b270fcb-362c-4a85-8065-bd3c8fd767e4", "label": "vocational training (Ausbildung)", "shape": "dot", "title": "Vocational training (Ausbildung) in Germany is a key feature of the German education system, known for its dual education model that combines classroom learning with practical experience. This system effectively bridges education and employment, making it a significant aspect of Germany\u0027s educational and economic landscape."}, {"color": "#97c2fc", "id": "2a306fac-f92d-4c86-bf0c-6e6899172df5", "label": "German Economy", "shape": "dot", "title": "The German Economy is the largest in Europe and the fourth-largest worldwide. It is characterized by key industries such as automotive, mechanical engineering, chemical, and electronics. Germany is a leading exporter of goods, with a strong manufacturing base and export-oriented industry, especially in automobiles and engineering. The country is part of Germany-Information, which provides detailed insights into its political structure, population, and economic strength."}, {"color": "#97c2fc", "id": "207ec2d5-dbaa-4c1c-a73a-a16cdcf2e648", "label": "Beethoven", "shape": "dot", "title": "Beethoven was a renowned German composer and musician, celebrated for his significant contributions to classical music. His legacy is deeply embedded in German cultural symbols, and he is associated with Germany\u0027s rich artistic heritage. Beethoven\u0027s influence extends beyond music, reflecting Germany\u0027s historical and cultural identity."}, {"color": "#97c2fc", "id": "1bcdfb66-2a89-4164-b4b5-64f4b7338900", "label": "chemical", "shape": "dot", "title": "The entity \u0027chemical\u0027 is associated with Germany, a country in Central Europe. Germany is a federal parliamentary republic with 16 federal states and a population of over 83 million. Its capital and largest city is Berlin. The country has the largest economy in Europe, driven by industries such as automotive, mechanical engineering, chemical, and electronics. Germany is a leading exporter of goods worldwide, with a strong manufacturing base and export-oriented industry, especially in automobiles and engineering."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "OFFERED_BY", "title": "Germany offers free or low-cost education in public universities.", "to": "915f8810-d845-4e7c-99fb-9c2840a2d05f"}, {"arrows": "to", "from": "94b0d3e0-8df7-42bf-92ec-2731c41d8072", "label": "INCLUDES", "title": "Important German cultural symbols include the Brandenburg Gate and Christmas markets.", "to": "ec7eb5a6-92c1-4618-82bc-0cabaca1cf32"}, {"arrows": "to", "from": "94b0d3e0-8df7-42bf-92ec-2731c41d8072", "label": "INCLUDES", "title": "Important German cultural symbols include the Brandenburg Gate and Beethoven.", "to": "207ec2d5-dbaa-4c1c-a73a-a16cdcf2e648"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "CONSISTS_OF", "title": "Germany consists of 16 federal states.", "to": "b802d093-f46d-497d-9c64-89d6681ccc4d"}, {"arrows": "to", "from": "94b0d3e0-8df7-42bf-92ec-2731c41d8072", "label": "INCLUDES", "title": "Important German cultural symbols include the Brandenburg Gate and bread culture.", "to": "2efb1dda-0099-40d2-a27d-9b1a689d0101"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "HAS_CAPITAL", "title": "Berlin is the capital of Germany.", "to": "a1b213ce-34ce-4825-a143-1db9de385595"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "IS_LARGEST_CITY", "title": "Berlin is the largest city of Germany.", "to": "a1b213ce-34ce-4825-a143-1db9de385595"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "IS_LOCATED_IN", "title": "Germany is a federal parliamentary republic in Central Europe.", "to": "ba2134bf-0228-4fa9-af53-c1833f47f420"}, {"arrows": "to", "from": "2a306fac-f92d-4c86-bf0c-6e6899172df5", "label": "INCLUDES_KEY_INDUSTRY", "title": "German Economy\u0027s key industries include chemical.", "to": "1bcdfb66-2a89-4164-b4b5-64f4b7338900"}, {"arrows": "to", "from": "94b0d3e0-8df7-42bf-92ec-2731c41d8072", "label": "INCLUDES", "title": "Important German cultural symbols include the Brandenburg Gate and Goethe.", "to": "997e3513-2441-4ddb-ac0d-8c2871c17d9c"}, {"arrows": "to", "from": "a1b213ce-34ce-4825-a143-1db9de385595", "label": "IS_POLITICAL_AND_CULTURAL_CENTER", "title": "Berlin is the political and cultural center of Germany.", "to": "78ac8cc0-f7fc-40da-bcc1-30059ba59960"}, {"arrows": "to", "from": "2a306fac-f92d-4c86-bf0c-6e6899172df5", "label": "INCLUDES_KEY_INDUSTRY", "title": "German Economy\u0027s key industries include automotive.", "to": "c8fdb49d-60a8-4475-a7b0-4e4a14d0f3b4"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "HAS_LARGEST_ECONOMY_IN", "title": "Germany has the largest economy in Europe.", "to": "2a306fac-f92d-4c86-bf0c-6e6899172df5"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "INCLUDES", "title": "Germany\u0027s education system includes the dual education model combining classroom and practical experience.", "to": "e150c7e9-778f-4980-b4e6-7287e2ffea0b"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "HAS_POPULATION", "title": "Germany has a population of over 83 million people.", "to": "7f1d0a1e-423f-403c-b0d0-02440e3ebd1a"}, {"arrows": "to", "from": "2a306fac-f92d-4c86-bf0c-6e6899172df5", "label": "INCLUDES_KEY_INDUSTRY", "title": "German Economy\u0027s key industries include electronics.", "to": "6b3595c9-c743-4bd4-8dc2-702944c51b4d"}, {"arrows": "to", "from": "78ac8cc0-f7fc-40da-bcc1-30059ba59960", "label": "INCLUDES", "title": "Germany\u0027s education system is known for vocational training (Ausbildung).", "to": "2b270fcb-362c-4a85-8065-bd3c8fd767e4"}, {"arrows": "to", "from": "2a306fac-f92d-4c86-bf0c-6e6899172df5", "label": "INCLUDES_KEY_INDUSTRY", "title": "German Economy\u0027s key industries include mechanical engineering.", "to": "af139a34-c39e-4d9c-9d5e-c4cc20061427"}, {"arrows": "to", "from": "94b0d3e0-8df7-42bf-92ec-2731c41d8072", "label": "INCLUDES", "title": "Important German cultural symbols include the Brandenburg Gate and Oktoberfest.", "to": "73fa51be-5ec7-45bf-a384-7f0a5cf4ba69"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"enabled": true, "stabilization": {"enabled": true, "iterations": 200}, "forceAtlas2Based": {"gravitationalConstant": -50, "centralGravity": 0.01, "springLength": 120, "springConstant": 0.08, "damping": 0.4, "avoidOverlap": 1}, "minVelocity": 0.75, "solver": "forceAtlas2Based"}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
