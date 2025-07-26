@@ -71,16 +71,9 @@
     </form>
     <div id="search-result"></div>
 
-    <!-- <h3>知识图谱</h3>
-    <button onclick="reloadGraph()">刷新图谱</button>
-    <iframe id="graph-frame" src="/graph?user_id=Countries" width="100%" height="600px" style="border:1px solid #ccc;"></iframe> -->
-    <!-- <h3>知识图谱</h3> -->
-    <!-- <button onclick="reloadGraph()">刷新图谱</button> -->
-    <!-- <div id="mynetwork"
-        style="width: 100%; height: 700px; min-height: 600px; border: 1px solid #ccc; background-color: #fff;">
-    </div> -->
+    <!-- 知识图谱 -->
     <h3 style="text-align:center; font-weight: 600; font-size: 28px; color: #fff; margin-top: 30px;">
-    📚 知识图谱
+    知识图谱
     </h3>
     <div style="text-align:center; margin-bottom: 16px;">
     <button onclick="reloadGraph()" style="
@@ -108,122 +101,22 @@
         position: relative;
         overflow: hidden;
     "></div>
-
-    <!-- 弹出窗口 -->
-    <!-- <div id="node-popup" style="
-        display: none;
-        position: fixed;
-        top: 15%;
-        left: 50%;
-        transform: translate(-50%, -15%);
-        width: 420px;
-        max-height: 500px;
-        overflow-y: auto;
-        padding: 24px;
-        background: #1a1a1a;
-        color: #eee;
-        border-radius: 16px;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-        font-family: 'Helvetica Neue', sans-serif;
-        font-size: 15px;
-        line-height: 1.6;
-        z-index: 1000;
-    ">
-    <div id="popup-content"></div>
-    <div style="text-align:right; margin-top: 16px;">
-        <button onclick="document.getElementById('node-popup').style.display='none'" style="
-            background: transparent;
-            border: 1px solid #555;
-            color: #ccc;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        ">关闭</button>
-    </div> -->
     </div>
-
+    
+    <!-- 图谱节点弹窗 -->
+    <div id="node-popup">
+    <div id="popup-header">节点信息</div>
+    <div id="popup-content">
+        <!-- JavaScript 动态填充内容 -->
+    </div>
+    <div id="popup-footer">
+        <button onclick="document.getElementById('node-popup').style.display='none'">关闭</button>
+    </div>
+    </div>
 
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
-
-        // 模拟已有项目列表（可改为后端动态拉取）
-        const projectList = ["Deep-Learning", "Germany-Information", "Coffee-Knowledge"];
-
-        window.onload = () => {
-            const submitSelect = document.getElementById("submit-project-select");
-            const retrievalSelect = document.getElementById("retrieval-project-select");
-            const summarySelect = document.getElementById("summary-project-select");
-
-            for (const name of projectList) {
-                const option1 = document.createElement("option");
-                option1.value = name;
-                option1.textContent = name;
-                submitSelect.appendChild(option1);
-
-                const option2 = document.createElement("option");
-                option2.value = name;
-                option2.textContent = name;
-                retrievalSelect.appendChild(option2);
-
-                const option3 = document.createElement("option");
-                option3.value = name;
-                option3.textContent = name;
-                summarySelect.appendChild(option3);
-            }
-
-            // 初始加载图谱（以提交表单的选中值为准）
-            reloadGraph();
-        };
-
-        // === 上传摘要功能 ===
-        document.getElementById("summary-form").addEventListener("submit", function (e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            fetch("/submitsummary", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                const status = document.getElementById("status");
-                if (data.status === "success") {
-                    status.textContent = "提交成功！";
-                    reloadGraph(); // 刷新 iframe
-                } else {
-                    status.textContent = "提交失败：" + data.message;
-                }
-            });
-        });
-
-        // === 上传笔记功能 ===
-        document.getElementById("note-form").addEventListener("submit", function (e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            fetch("/submitnote", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                const status = document.getElementById("status");
-                if (data.status === "success") {
-                    status.textContent = "提交成功！";
-                    reloadGraph(); // 刷新 iframe
-                } else {
-                    status.textContent = "提交失败：" + data.message;
-                }
-            });
-        });
-
-        // === 刷新图谱功能 ===
-        // function reloadGraph() {
-        //     const selectedProject = document.getElementById("submit-project-select").value;
-        //     const frame = document.getElementById("graph-frame");
-        //     frame.src = "/graph?user_id=" + encodeURIComponent(selectedProject) + "&ts=" + Date.now(); // 加时间戳防缓存
-        // }
+        // === 加载图谱相关函数 ===
         function processNodes(rawNodes) {
             return rawNodes.map(n => ({
                 ...n,
@@ -234,23 +127,6 @@
             }));
         }
 
-        // function handleNodeClick(params, nodes) {
-        //     if (params.nodes.length === 0) return;
-
-        //     const nodeId = params.nodes[0];
-        //     const nodeData = nodes.get(nodeId);
-
-        //     const contentHTML = `
-        //         <strong>节点名称：</strong> ${nodeData.label}<br>
-        //         <strong>摘要：</strong><br>
-        //         <div style="white-space: pre-wrap; margin-bottom: 8px;">
-        //             ${nodeData.title || "(无摘要)"}
-        //         </div>
-        //         <strong>创建时间：</strong> ${formatDate(nodeData.created_at) || "(未知)"}<br>
-        //     `;
-        //     document.getElementById("popup-content").innerHTML = contentHTML;
-        //     document.getElementById("node-popup").style.display = "block";
-        // }
         function handleNodeClick(params, nodes) {
             if (params.nodes.length === 0) return;
 
@@ -330,12 +206,12 @@
                 });
         }
 
-        
         function formatDate(raw) {
             if (!raw) return null;
             const date = new Date(raw);
             return isNaN(date) ? raw : date.toLocaleString();
         }
+
         function reloadGraph() {
             const selectedProject = document.getElementById("submit-project-select").value;
             fetch("/graph_data?user_id=" + encodeURIComponent(selectedProject))
@@ -412,11 +288,11 @@
                         enabled: true,
                         solver: "forceAtlas2Based",
                         forceAtlas2Based: {
-                        gravitationalConstant: -45,
+                        gravitationalConstant: -70,
                         centralGravity: 0.02,
-                        springLength: 140,
+                        springLength: 150,
                         springConstant: 0.05,
-                        damping: 0.6
+                        damping: 0.65
                         },
                         stabilization: {
                         enabled: true,
@@ -429,98 +305,81 @@
                     }
                     };
 
-
-                    // const options = {
-                    //     layout: {
-                    //         improvedLayout: true
-                    //     },
-                    //     nodes: {
-                    //         shape: "dot",
-                    //         size: 18,
-                    //         font: {
-                    //             size: 15,
-                    //             color: "#333",
-                    //             face: "Helvetica Neue, Segoe UI, San Francisco, sans-serif"
-                    //         },
-                    //         color: {
-                    //             background: "#f8f8f8",
-                    //             border: "#cccccc",
-                    //             highlight: {
-                    //                 background: "#ffffff",
-                    //                 border: "#666666"
-                    //             },
-                    //             hover: {
-                    //                 background: "#f0f0f0",
-                    //                 border: "#999999"
-                    //             }
-                    //         },
-                    //         borderWidth: 1,
-                    //         borderWidthSelected: 2
-                    //     },
-                    //     edges: {
-                    //         width: 1,
-                    //         color: {
-                    //             color: "#d0d0d0",
-                    //             highlight: "#888888",
-                    //             hover: "#aaaaaa"
-                    //         },
-                    //         arrows: {
-                    //             to: { enabled: true, scaleFactor: 0.4 }
-                    //         },
-                    //         smooth: {
-                    //             type: "dynamic"
-                    //         }
-                    //     },
-                    //     interaction: {
-                    //         hover: true,
-                    //         tooltipDelay: 100,
-                    //         navigationButtons: false,
-                    //         keyboard: false,
-                    //         zoomView: true,
-                    //         dragView: true
-                    //     },
-                    //     physics: {
-                    //         enabled: true,
-                    //         solver: "forceAtlas2Based",
-                    //         forceAtlas2Based: {
-                    //             gravitationalConstant: -30,
-                    //             centralGravity: 0.008,
-                    //             springLength: 140,
-                    //             springConstant: 0.06,
-                    //             damping: 0.4,
-                    //             avoidOverlap: 1
-                    //         },
-                    //         stabilization: {
-                    //             enabled: true,
-                    //             iterations: 200
-                    //         },
-                    //         minVelocity: 0.75
-                    //     }
-                    // };
-
                     const network = new vis.Network(container, { nodes, edges }, options);
-
-                    // const network = new vis.Network(container, { nodes, edges }, {
-                    //     physics: {
-                    //         enabled: true,
-                    //         solver: "forceAtlas2Based",
-                    //         forceAtlas2Based: {
-                    //             gravitationalConstant: -50,
-                    //             centralGravity: 0.01,
-                    //             springLength: 120,
-                    //             springConstant: 0.08,
-                    //             damping: 0.4,
-                    //             avoidOverlap: 1,
-                    //         },
-                    //         stabilization: { enabled: true, iterations: 200 },
-                    //         minVelocity: 0.75
-                    //     }
-                    // });
-
                     network.on("click", params => handleNodeClick(params, nodes));
                 });
         }
+        
+        // 模拟已有项目列表（可改为后端动态拉取）
+        const projectList = ["Deep-Learning", "Germany-Information", "Coffee-Knowledge"];
 
+        window.onload = () => {
+            const submitSelect = document.getElementById("submit-project-select");
+            const retrievalSelect = document.getElementById("retrieval-project-select");
+            const summarySelect = document.getElementById("summary-project-select");
+
+            for (const name of projectList) {
+                const option1 = document.createElement("option");
+                option1.value = name;
+                option1.textContent = name;
+                submitSelect.appendChild(option1);
+
+                const option2 = document.createElement("option");
+                option2.value = name;
+                option2.textContent = name;
+                retrievalSelect.appendChild(option2);
+
+                const option3 = document.createElement("option");
+                option3.value = name;
+                option3.textContent = name;
+                summarySelect.appendChild(option3);
+            }
+
+            // 初始加载图谱（以提交表单的选中值为准）
+            reloadGraph();
+        };
+
+        // === 上传摘要功能 ===
+        document.getElementById("summary-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch("/submitsummary", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                const status = document.getElementById("status");
+                if (data.status === "success") {
+                    status.textContent = "提交成功！";
+                    reloadGraph(); // 刷新 iframe
+                } else {
+                    status.textContent = "提交失败：" + data.message;
+                }
+            });
+        });
+
+        // === 上传笔记功能 ===
+        document.getElementById("note-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch("/submitnote", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                const status = document.getElementById("status");
+                if (data.status === "success") {
+                    status.textContent = "提交成功！";
+                    reloadGraph(); // 刷新 iframe
+                } else {
+                    status.textContent = "提交失败：" + data.message;
+                }
+            });
+        });
 
         // === 搜索节点功能 ===
         document.getElementById("search-form").addEventListener("submit", function (e) {
@@ -673,17 +532,5 @@
     border-radius: 3px;
   }
 </style>
-
-<div id="node-popup">
-  <div id="popup-header">节点信息</div>
-  <div id="popup-content">
-    <!-- JavaScript 动态填充内容 -->
-  </div>
-  <div id="popup-footer">
-    <button onclick="document.getElementById('node-popup').style.display='none'">关闭</button>
-  </div>
-</div>
-
-
 
 </html>
