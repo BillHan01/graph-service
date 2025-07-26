@@ -8,7 +8,9 @@ from flask_cors import CORS
 
 # === 加载配置 ===
 load_dotenv()
-API_KEY = os.environ.get("ZEP_API_KEY")
+# API_KEY = os.environ.get("ZEP_API_KEY")
+API_KEY = os.getenv("ZEP_API_KEY")
+
 client = Zep(api_key=API_KEY)
 
 app = Flask(__name__)
