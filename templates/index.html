@@ -74,11 +74,75 @@
     <!-- <h3>知识图谱</h3>
     <button onclick="reloadGraph()">刷新图谱</button>
     <iframe id="graph-frame" src="/graph?user_id=Countries" width="100%" height="600px" style="border:1px solid #ccc;"></iframe> -->
-    <h3>知识图谱</h3>
-    <button onclick="reloadGraph()">刷新图谱</button>
-    <div id="mynetwork"
+    <!-- <h3>知识图谱</h3> -->
+    <!-- <button onclick="reloadGraph()">刷新图谱</button> -->
+    <!-- <div id="mynetwork"
         style="width: 100%; height: 700px; min-height: 600px; border: 1px solid #ccc; background-color: #fff;">
+    </div> -->
+    <h3 style="text-align:center; font-weight: 600; font-size: 28px; color: #fff; margin-top: 30px;">
+    📚 知识图谱
+    </h3>
+    <div style="text-align:center; margin-bottom: 16px;">
+    <button onclick="reloadGraph()" style="
+        padding: 8px 18px;
+        font-size: 14px;
+        background: #2f2f2f;
+        border: 1px solid #444;
+        border-radius: 8px;
+        color: #eee;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    " onmouseover="this.style.background='#444'" onmouseout="this.style.background='#2f2f2f'">刷新图谱</button>
     </div>
+
+    <!-- 图谱容器 -->
+    <div id="mynetwork" style="
+        width: 100%;
+        height: 700px;
+        min-height: 600px;
+        background: radial-gradient(circle at center, #1a1a1a 0%, #121212 100%);
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        margin: auto;
+        position: relative;
+        overflow: hidden;
+    "></div>
+
+    <!-- 弹出窗口 -->
+    <!-- <div id="node-popup" style="
+        display: none;
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, -15%);
+        width: 420px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 24px;
+        background: #1a1a1a;
+        color: #eee;
+        border-radius: 16px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        font-family: 'Helvetica Neue', sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        z-index: 1000;
+    ">
+    <div id="popup-content"></div>
+    <div style="text-align:right; margin-top: 16px;">
+        <button onclick="document.getElementById('node-popup').style.display='none'" style="
+            background: transparent;
+            border: 1px solid #555;
+            color: #ccc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        ">关闭</button>
+    </div> -->
+    </div>
+
 
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
@@ -286,22 +350,172 @@
                     const edges = new vis.DataSet(data.edges);
                     const container = document.getElementById("mynetwork");
 
-                    const network = new vis.Network(container, { nodes, edges }, {
-                        physics: {
-                            enabled: true,
-                            solver: "forceAtlas2Based",
-                            forceAtlas2Based: {
-                                gravitationalConstant: -50,
-                                centralGravity: 0.01,
-                                springLength: 120,
-                                springConstant: 0.08,
-                                damping: 0.4,
-                                avoidOverlap: 1,
-                            },
-                            stabilization: { enabled: true, iterations: 200 },
-                            minVelocity: 0.75
+                    const options = {
+                    nodes: {
+                    shape: "dot",
+                    size: 30,  // 节点基础大小，后续可根据 degree 动态映射
+                    font: {
+                        face: "Helvetica Neue, Inter, sans-serif",
+                        size: 16,
+                        color: "#FFFFFF",
+                        strokeWidth: 0,
+                        bold: {
+                        color: "#FFFFFF",
+                        size: 18, // 鼠标悬浮时稍大
+                        face: "Helvetica Neue"
                         }
-                    });
+                    },
+                    color: {
+                        background: "#2C2C2E",
+                        border: "#4F4F4F",
+                        highlight: {
+                        background: "#444",  // 改为深灰
+                        border: "#888"       // 柔和边框高亮
+                        },
+                        hover: {
+                        background: "#555",
+                        border: "#AAA"
+                        }
+                    },
+                    borderWidth: 1,
+                    borderWidthSelected: 2
+                    },
+                    edges: {
+                    color: {
+                        color: "#999999",
+                        highlight: "#ffffff",
+                        hover: "#ffffff"
+                    },
+                    width: 1,
+                    smooth: {
+                        type: "dynamic"
+                    },
+                    font: {
+                        color: "#bbbbbb",
+                        size: 12,
+                        face: "Inter, Helvetica Neue, sans-serif",
+                        background: "rgba(30, 30, 30, 0.5)",
+                        strokeWidth: 0,
+                        align: "middle",
+                        vadjust: -2
+                    },
+                    arrows: {
+                        to: { enabled: false }
+                    }
+                    },
+                    interaction: {
+                        hover: true,
+                        tooltipDelay: 100,
+                        hideEdgesOnDrag: false
+                    },
+                    physics: {
+                        enabled: true,
+                        solver: "forceAtlas2Based",
+                        forceAtlas2Based: {
+                        gravitationalConstant: -45,
+                        centralGravity: 0.02,
+                        springLength: 140,
+                        springConstant: 0.05,
+                        damping: 0.6
+                        },
+                        stabilization: {
+                        enabled: true,
+                        iterations: 250,
+                        fit: true
+                        }
+                    },
+                    layout: {
+                        improvedLayout: true
+                    }
+                    };
+
+
+                    // const options = {
+                    //     layout: {
+                    //         improvedLayout: true
+                    //     },
+                    //     nodes: {
+                    //         shape: "dot",
+                    //         size: 18,
+                    //         font: {
+                    //             size: 15,
+                    //             color: "#333",
+                    //             face: "Helvetica Neue, Segoe UI, San Francisco, sans-serif"
+                    //         },
+                    //         color: {
+                    //             background: "#f8f8f8",
+                    //             border: "#cccccc",
+                    //             highlight: {
+                    //                 background: "#ffffff",
+                    //                 border: "#666666"
+                    //             },
+                    //             hover: {
+                    //                 background: "#f0f0f0",
+                    //                 border: "#999999"
+                    //             }
+                    //         },
+                    //         borderWidth: 1,
+                    //         borderWidthSelected: 2
+                    //     },
+                    //     edges: {
+                    //         width: 1,
+                    //         color: {
+                    //             color: "#d0d0d0",
+                    //             highlight: "#888888",
+                    //             hover: "#aaaaaa"
+                    //         },
+                    //         arrows: {
+                    //             to: { enabled: true, scaleFactor: 0.4 }
+                    //         },
+                    //         smooth: {
+                    //             type: "dynamic"
+                    //         }
+                    //     },
+                    //     interaction: {
+                    //         hover: true,
+                    //         tooltipDelay: 100,
+                    //         navigationButtons: false,
+                    //         keyboard: false,
+                    //         zoomView: true,
+                    //         dragView: true
+                    //     },
+                    //     physics: {
+                    //         enabled: true,
+                    //         solver: "forceAtlas2Based",
+                    //         forceAtlas2Based: {
+                    //             gravitationalConstant: -30,
+                    //             centralGravity: 0.008,
+                    //             springLength: 140,
+                    //             springConstant: 0.06,
+                    //             damping: 0.4,
+                    //             avoidOverlap: 1
+                    //         },
+                    //         stabilization: {
+                    //             enabled: true,
+                    //             iterations: 200
+                    //         },
+                    //         minVelocity: 0.75
+                    //     }
+                    // };
+
+                    const network = new vis.Network(container, { nodes, edges }, options);
+
+                    // const network = new vis.Network(container, { nodes, edges }, {
+                    //     physics: {
+                    //         enabled: true,
+                    //         solver: "forceAtlas2Based",
+                    //         forceAtlas2Based: {
+                    //             gravitationalConstant: -50,
+                    //             centralGravity: 0.01,
+                    //             springLength: 120,
+                    //             springConstant: 0.08,
+                    //             damping: 0.4,
+                    //             avoidOverlap: 1,
+                    //         },
+                    //         stabilization: { enabled: true, iterations: 200 },
+                    //         minVelocity: 0.75
+                    //     }
+                    // });
 
                     network.on("click", params => handleNodeClick(params, nodes));
                 });
@@ -395,61 +609,81 @@
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 500px;
+    max-width: 540px;
     max-height: 80vh;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    font-family: "Segoe UI", Roboto, sans-serif;
+    background-color: #1e1e1e;
+    color: #f2f2f2;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
     overflow: hidden;
-    border: 1px solid #ddd;
+    border: 1px solid #333;
+    backdrop-filter: blur(12px);
   }
 
   #popup-header {
-    background-color: #f5f5f5;
-    padding: 12px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    border-bottom: 1px solid #ddd;
+    padding: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid #333;
+    background-color: rgba(30, 30, 30, 0.9);
   }
 
   #popup-content {
-    padding: 16px 20px;
-    max-height: 60vh;
+    padding: 20px;
+    max-height: 55vh;
     overflow-y: auto;
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #ddd;
+  }
+
+  #popup-content p {
+    margin-bottom: 16px;
   }
 
   #popup-footer {
-    padding: 12px 20px;
+    padding: 16px 20px;
+    border-top: 1px solid #333;
+    background-color: rgba(30, 30, 30, 0.9);
     text-align: right;
-    border-top: 1px solid #eee;
   }
 
   #popup-footer button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 16px;
+    background-color: #2a2a2a;
+    color: #eee;
+    border: 1px solid #444;
+    padding: 8px 18px;
     font-size: 14px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: background-color 0.2s ease;
   }
 
   #popup-footer button:hover {
-    background-color: #0056b3;
+    background-color: #444;
+  }
+
+  /* 滚动条样式：极简灰色细线 */
+  #popup-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  #popup-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
   }
 </style>
 
 <div id="node-popup">
   <div id="popup-header">节点信息</div>
-  <div id="popup-content"></div>
+  <div id="popup-content">
+    <!-- JavaScript 动态填充内容 -->
+  </div>
   <div id="popup-footer">
     <button onclick="document.getElementById('node-popup').style.display='none'">关闭</button>
   </div>
 </div>
+
 
 
 </html>
