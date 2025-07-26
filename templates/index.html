@@ -280,9 +280,21 @@
                     }
                     },
                     interaction: {
-                        hover: true,
-                        tooltipDelay: 100,
-                        hideEdgesOnDrag: false
+                    hover: true,
+                    tooltipDelay: 200,
+                    hideEdgesOnDrag: false,
+                    tooltip: {
+                        delay: 100,
+                        fontColor: "#000000",
+                        fontSize: 14,
+                        fontFace: "Inter, Helvetica Neue, sans-serif",
+                        color: {
+                        background: "#ffffff",
+                        border: "#cccccc"
+                        },
+                        borderRadius: 6,
+                        padding: 8
+                    }
                     },
                     physics: {
                         enabled: true,
@@ -297,7 +309,8 @@
                         stabilization: {
                         enabled: true,
                         iterations: 250,
-                        fit: true
+                        updateInterval: 20,    // 控制动画步长
+                        fit: true              // 自动缩放至全屏
                         }
                     },
                     layout: {
