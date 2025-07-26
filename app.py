@@ -4,17 +4,16 @@ import os
 import json
 from dotenv import load_dotenv
 from pyvis.network import Network
+from flask_cors import CORS
 
 # === 加载配置 ===
 load_dotenv()
 API_KEY = os.environ.get("ZEP_API_KEY")
 client = Zep(api_key=API_KEY)
 
-# === 固定用户 ID ===
-FIXED_USER_ID = "001"
-# print(client.graph.node.get_by_user_id(FIXED_USER_ID))
-
 app = Flask(__name__)
+CORS(app, origins="*", methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["*"])
+
 
 # === 首页页面 ===
 @app.route("/")
@@ -48,7 +47,41 @@ def create_project():
 
 
 # === 提交笔记接口 ===
-@app.route("/submit", methods=["POST"])
+@app.route("/submitsummary", methods=["POST"])
+def submit_summary():
+    try:
+        project_name = request.form.get("project_name")
+        article_title = request.form.get("article_title")
+        chapter = request.form.get("chapter")
+        description = request.form.get("summary")
+
+        if not all([project_name, article_title, description]):
+            return jsonify({"status": "error", "message": "Missing required fields"}), 400
+
+        summary = {
+            "content": {
+                "project_name": project_name,
+                "article_title": article_title,
+                "summary": description,
+                "chapter": chapter or ""
+            }
+        }
+
+        json_data = json.dumps(summary["content"], ensure_ascii=False)
+
+        res = client.graph.add(
+            user_id=project_name,  # 用 project_name 作为 user_id
+            type="json",
+            data=json_data
+        )
+        return jsonify({"status": "success", "message": "Summary added successfully!"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# === 提交笔记接口 ===
+@app.route("/submitnote", methods=["POST"])
 def submit_note():
     try:
         project_name = request.form.get("project_name")
@@ -131,38 +164,6 @@ def generate_graph():
         return f"图谱生成失败：{str(e)}", 500
 
 
-# # 动态图谱数据接口
-# @app.route("/graph_data")
-# def graph_data():
-#     try:
-#         nodes = client.graph.node.get_by_user_id(FIXED_USER_ID)
-#         edges = client.graph.edge.get_by_user_id(FIXED_USER_ID)
-
-#         def to_vis():
-#             vis_nodes = []
-#             for node in nodes:
-#                 vis_nodes.append({
-#                     "id": node.uuid_,
-#                     "label": node.name or "Unnamed",
-#                     "title": node.summary or ""
-#                 })
-
-#             vis_edges = []
-#             for edge in edges:
-#                 vis_edges.append({
-#                     "from": edge.source_node_uuid,
-#                     "to": edge.target_node_uuid,
-#                     "label": edge.name or "",
-#                     "title": edge.fact or "",
-#                     "arrows": "to"
-#                 })
-
-#             return {"nodes": vis_nodes, "edges": vis_edges}
-
-#         return jsonify(to_vis())
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
 @app.route("/search", methods=["POST"])
 def search_nodes_or_episodes():
     try:
@@ -210,4 +211,5 @@ def search_nodes_or_episodes():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

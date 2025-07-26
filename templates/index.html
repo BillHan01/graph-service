@@ -8,12 +8,13 @@
         <p id="create-status"></p>
     </div>
 
-    <h2>Zep 图谱笔记提交与可视化</h2>
-
+    <h3>笔记提交</h3>
     <div id="form-container">
         <form id="note-form">
             <label>选择项目（project_name）：</label>
-            <select name="project_name" id="submit-project-select" required></select>
+            <div style="max-height: 150px; overflow-y: auto;">
+                <select name="project_name" id="submit-project-select" size="5"></select>
+            </div>
 
             <label>文章标题（article_title）：</label>
             <input type="text" name="article_title" required>
@@ -29,11 +30,34 @@
         <p id="status"></p>
     </div>
 
+    <h3>摘要提交</h3>
+    <div id="form-container">
+        <form id="summary-form">
+            <label>选择项目：</label>
+            <div style="max-height: 150px; overflow-y: auto;">
+                <select name="project_name" id="summary-project-select" size="5"></select>
+            </div>
+
+            <label>文章标题（article_title）：</label>
+            <input type="text" name="article_title" required>
+
+            <label>章节数据（chapter）</label>
+            <textarea name="chapter"></textarea>
+
+            <label>章节摘要（summary）</label>
+            <textarea name="summary" required></textarea>
+
+            <button type="submit">提交概述</button>
+        </form>
+        <p id="status"></p>
+    </div>
+
     <h3>搜索图谱</h3>
     <form id="search-form">
         <label>选择项目：</label>
-        <select name="project_name" id="retrieval-project-select" required></select>
-
+        <div style="max-height: 150px; overflow-y: auto;">
+            <select name="project_name" id="retrieval-project-select" size="5"></select>
+        </div>
         <label>查询内容：</label>
         <input type="text" name="query" required>
 
@@ -52,11 +76,12 @@
     <iframe id="graph-frame" src="/graph?user_id=Countries" width="100%" height="600px" style="border:1px solid #ccc;"></iframe>
     <script>
         // 模拟已有项目列表（可改为后端动态拉取）
-        const projectList = ["Deep-Learning", "Germany-Information"];
+        const projectList = ["Deep-Learning", "Germany-Information", "Coffee-Knowledge"];
 
         window.onload = () => {
             const submitSelect = document.getElementById("submit-project-select");
             const retrievalSelect = document.getElementById("retrieval-project-select");
+            const summarySelect = document.getElementById("summary-project-select");
 
             for (const name of projectList) {
                 const option1 = document.createElement("option");
@@ -68,18 +93,23 @@
                 option2.value = name;
                 option2.textContent = name;
                 retrievalSelect.appendChild(option2);
+
+                const option3 = document.createElement("option");
+                option3.value = name;
+                option3.textContent = name;
+                summarySelect.appendChild(option3);
             }
 
             // 初始加载图谱（以提交表单的选中值为准）
             reloadGraph();
         };
 
-
-        document.getElementById("note-form").addEventListener("submit", function (e) {
+        // === 上传摘要功能 ===
+        document.getElementById("summary-form").addEventListener("submit", function (e) {
             e.preventDefault();
             const formData = new FormData(this);
 
-            fetch("/submit", {
+            fetch("/submitsummary", {
                 method: "POST",
                 body: formData
             })
@@ -87,14 +117,36 @@
             .then(data => {
                 const status = document.getElementById("status");
                 if (data.status === "success") {
-                    status.textContent = "✅ 提交成功！";
+                    status.textContent = "提交成功！";
                     reloadGraph(); // 刷新 iframe
                 } else {
-                    status.textContent = "❌ 提交失败：" + data.message;
+                    status.textContent = "提交失败：" + data.message;
                 }
             });
         });
 
+        // === 上传笔记功能 ===
+        document.getElementById("note-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch("/submitnote", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                const status = document.getElementById("status");
+                if (data.status === "success") {
+                    status.textContent = "提交成功！";
+                    reloadGraph(); // 刷新 iframe
+                } else {
+                    status.textContent = "提交失败：" + data.message;
+                }
+            });
+        });
+
+        // === 刷新图谱功能 ===
         function reloadGraph() {
             const selectedProject = document.getElementById("submit-project-select").value;
             const frame = document.getElementById("graph-frame");
@@ -144,13 +196,14 @@
             });
         });
 
+        // === 创建项目功能 ===
         function createProject() {
             const input = document.getElementById("project-name-input");
             const name = input.value.trim();
             const statusBox = document.getElementById("create-status");
 
             if (!name) {
-                statusBox.textContent = "⚠️ 项目名称不能为空";
+                statusBox.textContent = "项目名称不能为空";
                 return;
             }
 
@@ -164,14 +217,14 @@
             .then(res => res.json())
             .then(data => {
                 if (data.status === "success") {
-                    statusBox.textContent = `✅ 项目 "${name}" 创建成功`;
+                    statusBox.textContent = `项目 "${name}" 创建成功`;
                     input.value = "";
                 } else {
-                    statusBox.textContent = "❌ 创建失败：" + data.message;
+                    statusBox.textContent = "创建失败：" + data.message;
                 }
             })
             .catch(err => {
-                statusBox.textContent = "❌ 请求出错：" + err;
+                statusBox.textContent = "请求出错：" + err;
             });
         }
     </script>
