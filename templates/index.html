@@ -71,10 +71,18 @@
     </form>
     <div id="search-result"></div>
 
+    <!-- <h3>知识图谱</h3>
+    <button onclick="reloadGraph()">刷新图谱</button>
+    <iframe id="graph-frame" src="/graph?user_id=Countries" width="100%" height="600px" style="border:1px solid #ccc;"></iframe> -->
     <h3>知识图谱</h3>
     <button onclick="reloadGraph()">刷新图谱</button>
-    <iframe id="graph-frame" src="/graph?user_id=Countries" width="100%" height="600px" style="border:1px solid #ccc;"></iframe>
+    <div id="mynetwork"
+        style="width: 100%; height: 700px; min-height: 600px; border: 1px solid #ccc; background-color: #fff;">
+    </div>
+
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
+
         // 模拟已有项目列表（可改为后端动态拉取）
         const projectList = ["Deep-Learning", "Germany-Information", "Coffee-Knowledge"];
 
@@ -147,11 +155,158 @@
         });
 
         // === 刷新图谱功能 ===
+        // function reloadGraph() {
+        //     const selectedProject = document.getElementById("submit-project-select").value;
+        //     const frame = document.getElementById("graph-frame");
+        //     frame.src = "/graph?user_id=" + encodeURIComponent(selectedProject) + "&ts=" + Date.now(); // 加时间戳防缓存
+        // }
+        function processNodes(rawNodes) {
+            return rawNodes.map(n => ({
+                ...n,
+                shape: "circle",
+                fixed: { width: true, height: true },
+                widthConstraint: { maximum: 80 },
+                font: { size: 14 }
+            }));
+        }
+
+        // function handleNodeClick(params, nodes) {
+        //     if (params.nodes.length === 0) return;
+
+        //     const nodeId = params.nodes[0];
+        //     const nodeData = nodes.get(nodeId);
+
+        //     const contentHTML = `
+        //         <strong>节点名称：</strong> ${nodeData.label}<br>
+        //         <strong>摘要：</strong><br>
+        //         <div style="white-space: pre-wrap; margin-bottom: 8px;">
+        //             ${nodeData.title || "(无摘要)"}
+        //         </div>
+        //         <strong>创建时间：</strong> ${formatDate(nodeData.created_at) || "(未知)"}<br>
+        //     `;
+        //     document.getElementById("popup-content").innerHTML = contentHTML;
+        //     document.getElementById("node-popup").style.display = "block";
+        // }
+        function handleNodeClick(params, nodes) {
+            if (params.nodes.length === 0) return;
+
+            const nodeId = params.nodes[0];
+            const nodeData = nodes.get(nodeId);
+            const nodeUUID = nodeData.id;
+
+            const popup = document.getElementById("node-popup");
+            const popupContent = document.getElementById("popup-content");
+
+            // 1. 初始加载内容（节点基础信息）
+            popupContent.innerHTML = `
+                <strong>节点名称：</strong> ${nodeData.label}<br>
+                <strong>知识描述：</strong><br>
+                <div style="white-space: pre-wrap; margin-bottom: 8px;">
+                    ${nodeData.title || "(无摘要)"}
+                </div>
+                <strong>创建时间：</strong> ${formatDate(nodeData.created_at) || "(未知)"}<br>
+                <hr>
+                <div id="episode-loading">正在加载相关笔记与摘要...</div>
+            `;
+            popup.style.display = "block";
+
+            // 2. 异步请求节点相关 Episode
+            fetch(`/node_episodes?node_uuid=${encodeURIComponent(nodeUUID)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const loadingDiv = document.getElementById("episode-loading");
+                    if (data.status !== "success") {
+                        loadingDiv.innerHTML = `<span style="color:red;">加载失败：${data.message}</span>`;
+                        return;
+                    }
+
+                    if (data.episodes.length === 0) {
+                        loadingDiv.innerHTML = `暂无关联笔记或摘要。`;
+                        return;
+                    }
+
+                    // 分组：先 note，后 summary（可选）
+                    const notes = data.episodes.filter(ep => ep.type === "note");
+                    const summaries = data.episodes.filter(ep => ep.type === "summary");
+
+                    let combinedHTML = "";
+
+                    if (notes.length > 0) {
+                        combinedHTML += `<h4>关联笔记</h4>`;
+                        combinedHTML += notes.map(ep => `
+                            <div style="margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 6px;">
+                                <strong>${ep.article_title}</strong><br>
+                                <span style="color: #666;">${formatDate(ep.created_at)}</span><br>
+                                <div style="white-space: pre-wrap; font-size: 14px;">
+                                    ${ep.comment || "(无内容)"}
+                                </div>
+                            </div>
+                        `).join("");
+                    }
+
+                    if (summaries.length > 0) {
+                        combinedHTML += `<h4>关联摘要</h4>`;
+                        combinedHTML += summaries.map(ep => `
+                            <div style="margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 6px;">
+                                <strong>${ep.article_title}</strong><br>
+                                <span style="color: #666;">${formatDate(ep.created_at)}</span><br>
+                                ${ep.chapter ? `<div style="color: #888;">章节：${ep.chapter}</div>` : ""}
+                                <div style="white-space: pre-wrap; font-size: 14px;">
+                                    ${ep.summary || "(无摘要内容)"}
+                                </div>
+                            </div>
+                        `).join("");
+                    }
+
+                    loadingDiv.outerHTML = `<div style="margin-top: 10px;">${combinedHTML}</div>`;
+                })
+                .catch(err => {
+                    document.getElementById("episode-loading").innerHTML =
+                        `<span style="color:red;">网络错误：${err.message}</span>`;
+                });
+        }
+
+        
+        function formatDate(raw) {
+            if (!raw) return null;
+            const date = new Date(raw);
+            return isNaN(date) ? raw : date.toLocaleString();
+        }
         function reloadGraph() {
             const selectedProject = document.getElementById("submit-project-select").value;
-            const frame = document.getElementById("graph-frame");
-            frame.src = "/graph?user_id=" + encodeURIComponent(selectedProject) + "&ts=" + Date.now(); // 加时间戳防缓存
+            fetch("/graph_data?user_id=" + encodeURIComponent(selectedProject))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== "success") {
+                        alert("图谱加载失败：" + data.message);
+                        return;
+                    }
+
+                    const nodes = new vis.DataSet(processNodes(data.nodes));
+                    const edges = new vis.DataSet(data.edges);
+                    const container = document.getElementById("mynetwork");
+
+                    const network = new vis.Network(container, { nodes, edges }, {
+                        physics: {
+                            enabled: true,
+                            solver: "forceAtlas2Based",
+                            forceAtlas2Based: {
+                                gravitationalConstant: -50,
+                                centralGravity: 0.01,
+                                springLength: 120,
+                                springConstant: 0.08,
+                                damping: 0.4,
+                                avoidOverlap: 1,
+                            },
+                            stabilization: { enabled: true, iterations: 200 },
+                            minVelocity: 0.75
+                        }
+                    });
+
+                    network.on("click", params => handleNodeClick(params, nodes));
+                });
         }
+
 
         // === 搜索节点功能 ===
         document.getElementById("search-form").addEventListener("submit", function (e) {
@@ -228,5 +383,73 @@
             });
         }
     </script>
+
+    
 </body>
+
+<style>
+  #node-popup {
+    display: none;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+
+  #popup-header {
+    background-color: #f5f5f5;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+  }
+
+  #popup-content {
+    padding: 16px 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  #popup-footer {
+    padding: 12px 20px;
+    text-align: right;
+    border-top: 1px solid #eee;
+  }
+
+  #popup-footer button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #popup-footer button:hover {
+    background-color: #0056b3;
+  }
+</style>
+
+<div id="node-popup">
+  <div id="popup-header">节点信息</div>
+  <div id="popup-content"></div>
+  <div id="popup-footer">
+    <button onclick="document.getElementById('node-popup').style.display='none'">关闭</button>
+  </div>
+</div>
+
+
 </html>

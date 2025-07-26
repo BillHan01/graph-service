@@ -46,7 +46,7 @@ def create_project():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# === 提交笔记接口 ===
+# === 提交摘要接口 ===
 @app.route("/submitsummary", methods=["POST"])
 def submit_summary():
     try:
@@ -114,54 +114,145 @@ def submit_note():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-@app.route("/graph")
-def generate_graph():
+# @app.route("/graph")
+# def generate_graph():
+#     user_id = request.args.get("user_id")
+#     if not user_id:
+#         return "Missing user_id (project_name)", 400
+
+#     try:
+#         nodes = client.graph.node.get_by_user_id(user_id)
+#         edges = client.graph.edge.get_by_user_id(user_id)
+
+#         net = Network(height='1000px', width='100%', directed=True)
+
+#         for node in nodes:
+#             label = node.name or "no name"
+#             net.add_node(node.uuid_, label=label, title=node.summary or "")
+
+#         for edge in edges:
+#             src = edge.source_node_uuid
+#             tgt = edge.target_node_uuid
+#             label = edge.name or "relation"
+#             net.add_edge(src, tgt, label=label, title=edge.fact or "")
+
+#         net.set_options("""var options = {
+#           "physics": {
+#             "enabled": true,
+#             "stabilization": {
+#               "enabled": true,
+#               "iterations": 200
+#             },
+#             "forceAtlas2Based": {
+#               "gravitationalConstant": -50,
+#               "centralGravity": 0.01,
+#               "springLength": 120,
+#               "springConstant": 0.08,
+#               "damping": 0.4,
+#               "avoidOverlap": 1
+#             },
+#             "minVelocity": 0.75,
+#             "solver": "forceAtlas2Based"
+#           }
+#         }""")
+
+#         # 添加交互事件
+#         net.html += """
+#         <script type="text/javascript">
+#             // 等待图加载完成
+#             network.on("click", function (params) {
+#                 if (params.nodes.length > 0) {
+#                     let nodeId = params.nodes[0];
+#                     let nodeData = nodes.get(nodeId);
+#                     alert("你点击了节点：" + nodeData.label);
+#                     // 你可以在这里发起 AJAX 请求加载更多信息，或跳转链接等
+#                     // 例如 fetch(`/node_detail?uuid=${nodeId}`).then(...)
+#                 }
+#             });
+#         </script>
+#         """
+
+#         graph_path = f"static/graph_output_{user_id}.html"
+#         net.write_html(graph_path)
+#         return send_file(graph_path)
+
+#     except Exception as e:
+#         return f"图谱生成失败：{str(e)}", 500
+@app.route("/graph_data")
+def graph_data():
     user_id = request.args.get("user_id")
     if not user_id:
-        return "Missing user_id (project_name)", 400
+        return jsonify({"status": "error", "message": "Missing user_id"}), 400
 
     try:
         nodes = client.graph.node.get_by_user_id(user_id)
         edges = client.graph.edge.get_by_user_id(user_id)
 
-        net = Network(height='1000px', width='100%', directed=True)
+        node_list = [{
+            "id": node.uuid_,
+            "label": node.name or "no name",
+            "title": node.summary or "",
+            "created_at": node.created_at
+        } for node in nodes]
 
-        for node in nodes:
-            label = node.name or "no name"
-            net.add_node(node.uuid_, label=label, title=node.summary or "")
+        edge_list = [{
+            "from": edge.source_node_uuid,
+            "to": edge.target_node_uuid,
+            "label": edge.name or "relation",
+            "title": edge.fact or "",
+        } for edge in edges]
 
-        for edge in edges:
-            src = edge.source_node_uuid
-            tgt = edge.target_node_uuid
-            label = edge.name or "relation"
-            net.add_edge(src, tgt, label=label, title=edge.fact or "")
-
-        net.set_options("""var options = {
-          "physics": {
-            "enabled": true,
-            "stabilization": {
-              "enabled": true,
-              "iterations": 200
-            },
-            "forceAtlas2Based": {
-              "gravitationalConstant": -50,
-              "centralGravity": 0.01,
-              "springLength": 120,
-              "springConstant": 0.08,
-              "damping": 0.4,
-              "avoidOverlap": 1
-            },
-            "minVelocity": 0.75,
-            "solver": "forceAtlas2Based"
-          }
-        }""")
-
-        graph_path = f"static/graph_output_{user_id}.html"
-        net.write_html(graph_path)
-        return send_file(graph_path)
+        return jsonify({"status": "success", "nodes": node_list, "edges": edge_list})
 
     except Exception as e:
-        return f"图谱生成失败：{str(e)}", 500
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/node_episodes")
+def get_node_episodes():
+    node_uuid = request.args.get("node_uuid")
+    if not node_uuid:
+        return jsonify({"status": "error", "message": "Missing node_uuid"}), 400
+
+    try:
+        episodes = client.graph.node.get_episodes(node_uuid=node_uuid).episodes  
+
+        episode_list = []
+        for ep in episodes:
+            try:
+                content = json.loads(ep.content)
+                is_note = "origin" in content or "comment" in content
+                is_summary = "summary" in content
+
+                if is_note:
+                    episode_list.append({
+                        "type": "note",
+                        "article_title": content.get("article_title", "(无标题)"),
+                        "origin": content.get("origin", ""),
+                        "comment": content.get("comment", "（无笔记）"),
+                        "created_at": ep.created_at,
+                        "uuid": getattr(ep, "uuid", None)
+                    })
+                elif is_summary:
+                    episode_list.append({
+                        "type": "summary",
+                        "article_title": content.get("article_title", "(无标题)"),
+                        "summary": content.get("summary", ""),
+                        "chapter": content.get("chapter", "（无章节信息）"),
+                        "created_at": ep.created_at,
+                        "uuid": getattr(ep, "uuid", None)
+                    })
+                else:
+                    print(f"[跳过] 无有效字段: {content}")
+            except Exception as e:
+                print(f"[跳过] JSON 解析失败: {e}")
+
+        return jsonify({"status": "success", "episodes": episode_list})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 
 
 @app.route("/search", methods=["POST"])
